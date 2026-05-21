@@ -256,7 +256,7 @@ function getSampleData() {
 }
 
 function updateStats() {
-  var total = allData.reduce(function(s,r){ return s + Number(r.qty||0); }, 0);
+  var total = allData.reduce(function(s,r){ return s + (r.participants||[]).length + 1; }, 0);
   var conf  = allData.filter(function(r){ return r.confirmed === "Y"; }).length;
   document.getElementById("s-count").textContent     = allData.length + "건";
   document.getElementById("s-total").textContent     = total + "명";
@@ -288,7 +288,7 @@ function renderTable() {
       '<td style="font-size:12px;color:var(--gray-600)">' + (r.empId||"") + '</td>' +
       '<td style="font-weight:600">' + (r.empName||"") + '</td>' +
       '<td style="color:var(--gray-600)">' + (r.dept||"") + '</td>' +
-      '<td style="text-align:center;font-weight:700;color:var(--orange)">' + (r.qty||0) + '</td>' +
+      '<td style="text-align:center;font-weight:700;color:var(--orange)">' + ((r.participants||[]).length + 1) + '</td>' +
       '<td><span class="' + (r.confirmed==="Y"?"badge-y":"badge-n") + '">' + (r.confirmed==="Y"?"확정":"미확정") + '</span></td>' +
       '<td>' + parts + '</td>' +
       '<td style="font-size:12px;color:var(--gray-400);white-space:nowrap">' + dt + '</td>' +
@@ -333,7 +333,7 @@ function downloadXlsx() {
   // ── 신청자 목록 ──
   var ws1Headers = ["NO","신청자 사번","신청자 성명","부서","신청 수량","참석 확정"];
   var ws1Rows = allData.map(function(r, i) {
-    return [dCell(i+1,"n"), dCell(r.empId), dCell(r.empName), dCell(r.dept), dCell(r.qty,"n"), dCell(r.confirmed)];
+    return [dCell(i+1,"n"), dCell(r.empId), dCell(r.empName), dCell(r.dept), dCell((r.participants||[]).length + 1,"n"), dCell(r.confirmed)];
   });
   var ws1Data = [ws1Headers.map(hCell)].concat(ws1Rows);
   var ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
