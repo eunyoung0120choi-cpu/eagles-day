@@ -144,8 +144,8 @@
       <input class="search-input" type="text" id="search" placeholder="이름, 사번, 부서 검색..." oninput="renderTable()">
       <select class="filter-select" id="filter-schedule" onchange="renderTable()">
         <option value="">일정 전체</option>
-        <option value="6.2(화) 동료형">6.2(화) 동료형</option>
-        <option value="6.5(금) 동료 및 가족형">6.5(금) 동료 및 가족형</option>
+        <option value="6.2(화) 동료형 (잠실)">6.2(화) 동료형 (잠실)</option>
+        <option value="6.5(금) 동료 및 가족형 (부산)">6.5(금) 동료 및 가족형 (부산)</option>
       </select>
       <select class="filter-select" id="filter-confirmed" onchange="renderTable()">
         <option value="">전체</option>
@@ -160,7 +160,7 @@
         <thead>
           <tr>
             <th>NO</th><th>사번</th><th>신청자</th><th>부서</th>
-            <th>일정</th><th>수량</th><th>확정</th><th>참가자</th><th>신청일시</th><th></th>
+            <th>일정</th><th>장소</th><th>수량</th><th>확정</th><th>참가자</th><th>신청일시</th><th></th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -234,7 +234,7 @@ function loadData() {
     return;
   }
   var tbody = document.getElementById("tbody");
-  tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--gray-400)"><span class="mini-spinner"></span> 불러오는 중...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--gray-400)"><span class="mini-spinner"></span> 불러오는 중...</td></tr>';
 
   db.collection("applications").orderBy("submittedAt", "desc").get()
     .then(function(snap) {
@@ -242,7 +242,7 @@ function loadData() {
       updateStats(); renderTable();
     })
     .catch(function(e) {
-      tbody.innerHTML = '<tr><td colspan="10" class="no-data">데이터를 불러오지 못했습니다</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="no-data">데이터를 불러오지 못했습니다</td></tr>';
       console.error(e);
     });
 }
@@ -282,7 +282,7 @@ function renderTable() {
 
   var tbody = document.getElementById("tbody");
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" class="no-data">표시할 데이터가 없습니다</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="no-data">표시할 데이터가 없습니다</td></tr>';
     return;
   }
   tbody.innerHTML = filtered.map(function(r, i) {
@@ -291,13 +291,15 @@ function renderTable() {
     }).join("");
     var dt = r.submittedAt && r.submittedAt.toDate ? fmtDate(r.submittedAt.toDate()) : "—";
     var schedLabel = r.schedule || "—";
-    var schedColor = r.schedule === "6.2(화) 동료형" ? "var(--orange)" : r.schedule === "6.5(금) 동료 및 가족형" ? "var(--green)" : "var(--gray-400)";
+    var schedColor = r.schedule && r.schedule.startsWith("6.2") ? "var(--orange)" : r.schedule && r.schedule.startsWith("6.5") ? "var(--green)" : "var(--gray-400)";
+    var venueLabel = r.venue || (r.schedule && r.schedule.startsWith("6.2") ? "잠실" : r.schedule && r.schedule.startsWith("6.5") ? "부산" : "—");
     return '<tr>' +
       '<td style="color:var(--gray-400);font-size:12px">' + (i+1) + '</td>' +
       '<td style="font-size:12px;color:var(--gray-600)">' + (r.empId||"") + '</td>' +
       '<td style="font-weight:600">' + (r.empName||"") + '</td>' +
       '<td style="color:var(--gray-600)">' + (r.dept||"") + '</td>' +
       '<td style="font-size:12px;font-weight:600;color:' + schedColor + ';white-space:nowrap">' + schedLabel + '</td>' +
+      '<td style="font-size:12px;text-align:center;color:var(--gray-600)">' + venueLabel + '</td>' +
       '<td style="text-align:center;font-weight:700;color:var(--orange)">' + ((r.participants||[]).length + 1) + '</td>' +
       '<td><span class="' + (r.confirmed==="Y"?"badge-y":"badge-n") + '">' + (r.confirmed==="Y"?"확정":"미확정") + '</span></td>' +
       '<td>' + parts + '</td>' +
@@ -343,31 +345,31 @@ function downloadXlsx() {
   var wb = XLSX.utils.book_new();
 
   // ── 신청자 목록 ──
-  var ws1Headers = ["NO","일정","신청자 사번","신청자 성명","부서","신청 수량","참석 확정"];
+  var ws1Headers = ["NO","일정","장소","신청자 사번","신청자 성명","부서","신청 수량","참석 확정"];
   var ws1Rows = allData.map(function(r, i) {
-    return [dCell(i+1,"n"), dCell(schedDate(r.schedule)), dCell(r.empId), dCell(r.empName), dCell(r.dept), dCell((r.participants||[]).length + 1,"n"), dCell(r.confirmed)];
+    var v = r.venue || (r.schedule && r.schedule.startsWith("6.2") ? "잠실" : r.schedule && r.schedule.startsWith("6.5") ? "부산" : "");
+    return [dCell(i+1,"n"), dCell(schedDate(r.schedule)), dCell(v), dCell(r.empId), dCell(r.empName), dCell(r.dept), dCell((r.participants||[]).length + 1,"n"), dCell(r.confirmed)];
   });
   var ws1Data = [ws1Headers.map(hCell)].concat(ws1Rows);
   var ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
-  ws1["!cols"] = [{wch:6},{wch:12},{wch:14},{wch:12},{wch:18},{wch:10},{wch:10}];
+  ws1["!cols"] = [{wch:6},{wch:12},{wch:8},{wch:14},{wch:12},{wch:18},{wch:10},{wch:10}];
   XLSX.utils.book_append_sheet(wb, ws1, "신청자 목록");
 
   // ── 참가자 목록 (신청자 본인 자동 포함) ──
-  var ws2Headers = ["NO","일정","신청자 사번","신청자 성명","참가자 성명","관계","연령대","비고"];
+  var ws2Headers = ["NO","일정","장소","신청자 사번","신청자 성명","참가자 성명","관계","연령대","비고"];
   var ws2Rows = [];
   var no = 1;
   allData.forEach(function(r) {
     var sched = schedDate(r.schedule);
-    // 신청자 본인을 맨 앞에 자동 추가
-    ws2Rows.push([dCell(no++,"n"), dCell(sched), dCell(r.empId), dCell(r.empName), dCell(r.empName), dCell("본인"), dCell("성인"), dCell("")]);
-    // 나머지 참가자
+    var v = r.venue || (r.schedule && r.schedule.startsWith("6.2") ? "잠실" : r.schedule && r.schedule.startsWith("6.5") ? "부산" : "");
+    ws2Rows.push([dCell(no++,"n"), dCell(sched), dCell(v), dCell(r.empId), dCell(r.empName), dCell(r.empName), dCell("본인"), dCell("성인"), dCell("")]);
     (r.participants||[]).forEach(function(p) {
-      ws2Rows.push([dCell(no++,"n"), dCell(sched), dCell(r.empId), dCell(r.empName), dCell(p.name), dCell(p.relation), dCell(p.ageGroup), dCell(p.note||"")]);
+      ws2Rows.push([dCell(no++,"n"), dCell(sched), dCell(v), dCell(r.empId), dCell(r.empName), dCell(p.name), dCell(p.relation), dCell(p.ageGroup), dCell(p.note||"")]);
     });
   });
   var ws2Data = [ws2Headers.map(hCell)].concat(ws2Rows);
   var ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
-  ws2["!cols"] = [{wch:6},{wch:12},{wch:14},{wch:12},{wch:14},{wch:10},{wch:10},{wch:20}];
+  ws2["!cols"] = [{wch:6},{wch:12},{wch:8},{wch:14},{wch:12},{wch:14},{wch:10},{wch:10},{wch:20}];
   XLSX.utils.book_append_sheet(wb, ws2, "참가자 목록");
 
   var today = new Date();
