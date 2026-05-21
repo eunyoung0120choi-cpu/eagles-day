@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>이글스 데이 — 관리자</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <style>
   :root {
     --orange: #F4611A;
@@ -318,27 +318,43 @@ function fmtDate(d) {
 function downloadXlsx() {
   if (allData.length === 0) { showToast("다운로드할 데이터가 없습니다", "error"); return; }
 
+  var HEADER_FILL = { patternType: "solid", fgColor: { rgb: "FDE9D9" } };
+  var HEADER_FONT = { bold: true, name: "Arial", sz: 10 };
+  var DATA_FONT   = { name: "Arial", sz: 10 };
+  var CENTER      = { horizontal: "center", vertical: "center" };
+  var THIN        = { style: "thin", color: { rgb: "000000" } };
+  var BORDER      = { top: THIN, bottom: THIN, left: THIN, right: THIN };
+
+  function hCell(v) { return { v: v, t: "s", s: { fill: HEADER_FILL, font: HEADER_FONT, alignment: CENTER, border: BORDER } }; }
+  function dCell(v, t) { return { v: v, t: t||"s", s: { font: DATA_FONT, alignment: CENTER, border: BORDER } }; }
+
   var wb = XLSX.utils.book_new();
 
-  var ws1Data = [
-    ["NO","신청자 사번","신청자 성명","부서","신청 수량","참석 확정"]
-  ].concat(allData.map(function(r,i){ return [i+1,r.empId,r.empName,r.dept,r.qty,r.confirmed]; }));
+  // ── 신청자 목록 ──
+  var ws1Headers = ["NO","신청자 사번","신청자 성명","부서","신청 수량","참석 확정"];
+  var ws1Rows = allData.map(function(r, i) {
+    return [dCell(i+1,"n"), dCell(r.empId), dCell(r.empName), dCell(r.dept), dCell(r.qty,"n"), dCell(r.confirmed)];
+  });
+  var ws1Data = [ws1Headers.map(hCell)].concat(ws1Rows);
   var ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
-  ws1["!cols"] = [{wch:5},{wch:14},{wch:12},{wch:18},{wch:10},{wch:10}];
+  ws1["!cols"] = [{wch:6},{wch:14},{wch:12},{wch:18},{wch:10},{wch:10}];
   XLSX.utils.book_append_sheet(wb, ws1, "신청자 목록");
 
+  // ── 참가자 목록 (신청자 본인 자동 포함) ──
+  var ws2Headers = ["NO","신청자 사번","신청자 성명","참가자 성명","관계","연령대","비고"];
   var ws2Rows = [];
   var no = 1;
   allData.forEach(function(r) {
+    // 신청자 본인을 맨 앞에 자동 추가
+    ws2Rows.push([dCell(no++,"n"), dCell(r.empId), dCell(r.empName), dCell(r.empName), dCell("본인"), dCell("성인"), dCell("")]);
+    // 나머지 참가자
     (r.participants||[]).forEach(function(p) {
-      ws2Rows.push([no++,r.empId,r.empName,p.name,p.relation,p.ageGroup,p.note||""]);
+      ws2Rows.push([dCell(no++,"n"), dCell(r.empId), dCell(r.empName), dCell(p.name), dCell(p.relation), dCell(p.ageGroup), dCell(p.note||"")]);
     });
   });
-  var ws2Data = [
-    ["NO","신청자 사번","신청자 성명","참가자 성명","관계","연령대","비고"]
-  ].concat(ws2Rows);
+  var ws2Data = [ws2Headers.map(hCell)].concat(ws2Rows);
   var ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
-  ws2["!cols"] = [{wch:5},{wch:14},{wch:12},{wch:14},{wch:10},{wch:10},{wch:20}];
+  ws2["!cols"] = [{wch:6},{wch:14},{wch:12},{wch:14},{wch:10},{wch:10},{wch:20}];
   XLSX.utils.book_append_sheet(wb, ws2, "참가자 목록");
 
   var today = new Date();
