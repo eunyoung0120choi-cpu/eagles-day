@@ -330,6 +330,19 @@ function fmtDate(d) {
 function downloadXlsx() {
   if (allData.length === 0) { showToast("다운로드할 데이터가 없습니다", "error"); return; }
 
+  // 현재 화면 필터 그대로 적용
+  var q  = document.getElementById("search").value.toLowerCase();
+  var cf = document.getElementById("filter-confirmed").value;
+  var sf = document.getElementById("filter-schedule").value;
+  var exportData = allData.filter(function(r) {
+    var match   = !q  || [r.empId,r.empName,r.dept].some(function(x){ return (x||"").toLowerCase().includes(q); });
+    var confOk  = !cf || r.confirmed === cf;
+    var schedOk = !sf || (r.schedule||"") === sf;
+    return match && confOk && schedOk;
+  });
+
+  if (exportData.length === 0) { showToast("필터 조건에 해당하는 데이터가 없습니다", "error"); return; }
+
   var HEADER_FILL = { patternType: "solid", fgColor: { rgb: "FDE9D9" } };
   var HEADER_FONT = { bold: true, name: "Arial", sz: 10 };
   var DATA_FONT   = { name: "Arial", sz: 10 };
@@ -339,14 +352,13 @@ function downloadXlsx() {
 
   function hCell(v) { return { v: v, t: "s", s: { fill: HEADER_FILL, font: HEADER_FONT, alignment: CENTER, border: BORDER } }; }
   function dCell(v, t) { return { v: v, t: t||"s", s: { font: DATA_FONT, alignment: CENTER, border: BORDER } }; }
-  // "6.2(화) 동료형" → "6.2(화)" 처럼 첫 토큰만 추출
   function schedDate(s) { return s ? s.split(" ")[0] : ""; }
 
   var wb = XLSX.utils.book_new();
 
   // ── 신청자 목록 ──
   var ws1Headers = ["NO","일정","장소","신청자 사번","신청자 성명","부서","신청 수량","참석 확정"];
-  var ws1Rows = allData.map(function(r, i) {
+  var ws1Rows = exportData.map(function(r, i) {
     var v = r.venue || (r.schedule && r.schedule.startsWith("6.2") ? "잠실" : r.schedule && r.schedule.startsWith("6.5") ? "부산" : "");
     return [dCell(i+1,"n"), dCell(schedDate(r.schedule)), dCell(v), dCell(r.empId), dCell(r.empName), dCell(r.dept), dCell((r.participants||[]).length + 1,"n"), dCell(r.confirmed)];
   });
@@ -359,7 +371,7 @@ function downloadXlsx() {
   var ws2Headers = ["NO","일정","장소","신청자 사번","신청자 성명","참가자 성명","관계","연령대","비고"];
   var ws2Rows = [];
   var no = 1;
-  allData.forEach(function(r) {
+  exportData.forEach(function(r) {
     var sched = schedDate(r.schedule);
     var v = r.venue || (r.schedule && r.schedule.startsWith("6.2") ? "잠실" : r.schedule && r.schedule.startsWith("6.5") ? "부산" : "");
     ws2Rows.push([dCell(no++,"n"), dCell(sched), dCell(v), dCell(r.empId), dCell(r.empName), dCell(r.empName), dCell("본인"), dCell("성인"), dCell("")]);
@@ -373,7 +385,9 @@ function downloadXlsx() {
   XLSX.utils.book_append_sheet(wb, ws2, "참가자 목록");
 
   var today = new Date();
-  var fn = "이글스_데이_취합_명단_" + today.getFullYear() + String(today.getMonth()+1).padStart(2,"0") + String(today.getDate()).padStart(2,"0") + ".xlsx";
+  var datePart = today.getFullYear() + String(today.getMonth()+1).padStart(2,"0") + String(today.getDate()).padStart(2,"0");
+  var schedPart = sf ? "_" + schedDate(sf) : "";
+  var fn = "이글스_데이_취합_명단" + schedPart + "_" + datePart + ".xlsx";
   XLSX.writeFile(wb, fn);
   showToast("엑셀 파일이 다운로드되었습니다");
 }
