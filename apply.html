@@ -134,10 +134,10 @@
     </div>
 
     <div class="card">
-      <div class="card-title">참가자 목록 — <span id="part-count-label">1명</span></div>
+      <div class="card-title">동반 참가자 — <span id="part-count-label">0명</span> <span style="font-size:11px;color:var(--gray-400);font-weight:400;letter-spacing:0;">(신청자 본인 제외)</span></div>
       <div class="err-banner" id="err-parts" style="background:#FFF5F5;border:1.5px solid #FED7D7;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:14px;display:none;"></div>
       <div id="parts-container"></div>
-      <button class="add-btn" onclick="addParticipant()">+ 참가자 추가</button>
+      <button class="add-btn" onclick="addParticipant()">+ 동반 참가자 추가</button>
     </div>
 
     <button class="submit-btn" id="submit-btn" onclick="handleSubmit()">신청 완료</button>
@@ -183,14 +183,14 @@ try {
 }
 
 // ── 상수 ──────────────────────────────────────────
-var RELATIONS  = ["본인","배우자","자녀","부모","형제/자매","기타"];
+var RELATIONS  = ["","배우자","자녀","부모","형제/자매","기타"];
 var AGE_GROUPS = ["성인","청소년","초등","유아"];
 
 var participants = [];
 var pidSeq = 0;
 
 function makePart() {
-  return { id: ++pidSeq, name: "", relation: "본인", ageGroup: "성인", note: "" };
+  return { id: ++pidSeq, name: "", relation: "", ageGroup: "성인", note: "" };
 }
 
 // ── 참가자 렌더링 ─────────────────────────────────
@@ -204,8 +204,8 @@ function renderParts() {
     div.className = "p-card";
     div.innerHTML =
       '<div class="p-card-header">' +
-        '<span class="p-num">참가자 ' + (i + 1) + '</span>' +
-        (i > 0 ? '<button class="del-btn" onclick="delPart(' + p.id + ')">삭제</button>' : '') +
+        '<span class="p-num">동반 참가자 ' + (i + 1) + '</span>' +
+        '<button class="del-btn" onclick="delPart(' + p.id + ')">삭제</button>' +
       '</div>' +
       '<div class="grid3">' +
         '<div class="field">' +
@@ -216,7 +216,7 @@ function renderParts() {
         '<div class="field">' +
           '<label>관계</label>' +
           '<select onchange="upP(' + p.id + ',\'relation\',this.value)">' +
-            RELATIONS.map(function(r){ return '<option value="' + r + '"' + (p.relation===r?' selected':'') + '>' + r + '</option>'; }).join("") +
+            RELATIONS.map(function(r){ return '<option value="' + r + '"' + (p.relation===r?' selected':'') + (r===''?' disabled':'') + '>' + (r===''?'관계 선택':r) + '</option>'; }).join("") +
           '</select>' +
         '</div>' +
         '<div class="field">' +
@@ -304,12 +304,13 @@ function handleSubmit() {
   }
 
   var empName = gv("empName");
+  var totalQty = participants.length + 1; // 신청자 본인 포함
   var payload = {
     empId:     gv("empId"),
     empName:   empName,
     dept:      gv("dept"),
     confirmed: document.getElementById("confirmed").value,
-    qty:       participants.length,
+    qty:       totalQty,
     participants: participants.map(function(p) {
       return { name: p.name.trim(), relation: p.relation, ageGroup: p.ageGroup, note: p.note.trim() };
     }),
@@ -324,7 +325,7 @@ function handleSubmit() {
       document.getElementById("loading").classList.remove("show");
       document.getElementById("form-area").style.display = "none";
       document.getElementById("success-msg").textContent =
-        empName + "님의 신청(" + participants.length + "명)이 정상적으로 접수되었습니다.";
+        empName + "님의 신청(" + totalQty + "명)이 정상적으로 접수되었습니다.";
       document.getElementById("success-screen").classList.add("show");
     })
     .catch(function(err) {
@@ -340,7 +341,7 @@ function resetForm() {
   document.getElementById("form-area").style.display = "block";
   ["empId","empName","dept"].forEach(function(f){ document.getElementById(f).value = ""; });
   document.getElementById("confirmed").value = "Y";
-  participants = [makePart()];
+  participants = [];
   renderParts();
   clearErrors();
   document.getElementById("submit-btn").disabled = false;
@@ -355,7 +356,7 @@ function showToast(msg, type) {
 }
 
 // ── 초기화 ────────────────────────────────────────
-participants = [makePart()];
+participants = [];  // 신청자 본인은 자동 포함되므로 빈 상태로 시작
 renderParts();
 
 // 인라인 onclick에서 반드시 전역으로 접근 가능해야 하는 함수들을 명시적으로 등록
