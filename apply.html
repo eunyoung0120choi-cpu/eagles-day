@@ -111,8 +111,8 @@
         <label>일정 선택<span class="req">*</span></label>
         <select id="schedule" onchange="onScheduleChange()">
           <option value="" disabled selected>일정을 선택해주세요</option>
-          <option value="6.2(화) 동료형">6.2(화) 동료형</option>
-          <option value="6.5(금) 동료 및 가족형">6.5(금) 동료 및 가족형</option>
+          <option value="6.2(화) 동료형 (잠실)">6.2(화) 동료형 (잠실)</option>
+          <option value="6.5(금) 동료 및 가족형 (부산)">6.5(금) 동료 및 가족형 (부산)</option>
         </select>
         <div class="err-msg" id="err-schedule">일정을 선택해주세요</div>
       </div>
@@ -193,12 +193,12 @@ try {
 
 // ── 상수 ──────────────────────────────────────────
 var RELATIONS_COLLEAGUE = ["","동료"];
-var RELATIONS_FAMILY    = ["","배우자","자녀","부모","형제/자매","동료","기타"];
+var RELATIONS_FAMILY    = ["","배우자","자녀","부모","형제/자매","동료","조부모"];
 var AGE_GROUPS = ["성인","청소년","초등","유아"];
 
 function getCurrentRelations() {
   var sched = document.getElementById("schedule").value;
-  return sched === "6.2(화) 동료형" ? RELATIONS_COLLEAGUE : RELATIONS_FAMILY;
+  return sched === "6.2(화) 동료형 (잠실)" ? RELATIONS_COLLEAGUE : RELATIONS_FAMILY;
 }
 
 function onScheduleChange() {
@@ -248,12 +248,6 @@ function renderParts() {
           '<select onchange="upP(' + p.id + ',\'ageGroup\',this.value)">' +
             AGE_GROUPS.map(function(a){ return '<option value="' + a + '"' + (p.ageGroup===a?' selected':'') + '>' + a + '</option>'; }).join("") +
           '</select>' +
-        '</div>' +
-      '</div>' +
-      '<div style="margin-top:10px">' +
-        '<div class="field">' +
-          '<label>비고</label>' +
-          '<input type="text" placeholder="선택 입력" value="' + esc(p.note) + '" oninput="upP(' + p.id + ',\'note\',this.value)">' +
         '</div>' +
       '</div>';
     c.appendChild(div);
@@ -330,8 +324,11 @@ function handleSubmit() {
 
   var empName = gv("empName");
   var totalQty = participants.length + 1; // 신청자 본인 포함
+  var schedVal = document.getElementById("schedule").value;
+  var venueVal = schedVal === "6.2(화) 동료형 (잠실)" ? "잠실" : schedVal === "6.5(금) 동료 및 가족형 (부산)" ? "부산" : "";
   var payload = {
-    schedule:  document.getElementById("schedule").value,
+    schedule:  schedVal,
+    venue:     venueVal,
     empId:     gv("empId"),
     empName:   empName,
     dept:      gv("dept"),
