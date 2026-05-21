@@ -107,6 +107,15 @@
   <div id="form-area">
     <div class="card">
       <div class="card-title">신청자 정보</div>
+      <div class="field" id="f-schedule" style="margin-bottom:16px">
+        <label>일정 선택<span class="req">*</span></label>
+        <select id="schedule" onchange="onScheduleChange()">
+          <option value="" disabled selected>일정을 선택해주세요</option>
+          <option value="6.2(화) 동료형">6.2(화) 동료형</option>
+          <option value="6.5(금) 동료 및 가족형">6.5(금) 동료 및 가족형</option>
+        </select>
+        <div class="err-msg" id="err-schedule">일정을 선택해주세요</div>
+      </div>
       <div class="grid2">
         <div class="field" id="f-empId">
           <label>사번<span class="req">*</span></label>
@@ -183,8 +192,23 @@ try {
 }
 
 // ── 상수 ──────────────────────────────────────────
-var RELATIONS  = ["","배우자","자녀","부모","형제/자매","기타"];
+var RELATIONS_COLLEAGUE = ["","동료"];
+var RELATIONS_FAMILY    = ["","배우자","자녀","부모","형제/자매","동료","기타"];
 var AGE_GROUPS = ["성인","청소년","초등","유아"];
+
+function getCurrentRelations() {
+  var sched = document.getElementById("schedule").value;
+  return sched === "6.2(화) 동료형" ? RELATIONS_COLLEAGUE : RELATIONS_FAMILY;
+}
+
+function onScheduleChange() {
+  var el = document.getElementById("schedule");
+  el.classList.remove("has-error");
+  document.getElementById("err-schedule").classList.remove("show");
+  // 일정 변경 시 기존 참가자의 관계 초기화 후 재렌더링
+  participants.forEach(function(p){ p.relation = ""; });
+  renderParts();
+}
 
 var participants = [];
 var pidSeq = 0;
@@ -216,7 +240,7 @@ function renderParts() {
         '<div class="field">' +
           '<label>관계</label>' +
           '<select onchange="upP(' + p.id + ',\'relation\',this.value)">' +
-            RELATIONS.map(function(r){ return '<option value="' + r + '"' + (p.relation===r?' selected':'') + (r===''?' disabled':'') + '>' + (r===''?'관계 선택':r) + '</option>'; }).join("") +
+            getCurrentRelations().map(function(r){ return '<option value="' + r + '"' + (p.relation===r?' selected':'') + (r===''?' disabled':'') + '>' + (r===''?'관계 선택':r) + '</option>'; }).join("") +
           '</select>' +
         '</div>' +
         '<div class="field">' +
@@ -261,7 +285,7 @@ function addParticipant() {
 
 // ── 유효성 검사 ───────────────────────────────────
 function clearErrors() {
-  ["empId","empName","dept"].forEach(function(f) {
+  ["empId","empName","dept","schedule"].forEach(function(f) {
     document.getElementById("err-" + f).classList.remove("show");
     document.getElementById(f).classList.remove("has-error");
   });
@@ -277,6 +301,7 @@ function setErr(field, msg) {
 function validate() {
   clearErrors();
   var ok = true;
+  if (!document.getElementById("schedule").value) { setErr("schedule", "일정을 선택해주세요"); ok = false; }
   if (!gv("empId"))   { setErr("empId",   "사번을 입력해주세요");  ok = false; }
   if (!gv("empName")) { setErr("empName", "성명을 입력해주세요");  ok = false; }
   if (!gv("dept"))    { setErr("dept",    "부서를 입력해주세요");  ok = false; }
@@ -306,6 +331,7 @@ function handleSubmit() {
   var empName = gv("empName");
   var totalQty = participants.length + 1; // 신청자 본인 포함
   var payload = {
+    schedule:  document.getElementById("schedule").value,
     empId:     gv("empId"),
     empName:   empName,
     dept:      gv("dept"),
@@ -340,6 +366,7 @@ function resetForm() {
   document.getElementById("success-screen").classList.remove("show");
   document.getElementById("form-area").style.display = "block";
   ["empId","empName","dept"].forEach(function(f){ document.getElementById(f).value = ""; });
+  document.getElementById("schedule").value = "";
   document.getElementById("confirmed").value = "Y";
   participants = [];
   renderParts();
@@ -360,11 +387,12 @@ participants = [];  // 신청자 본인은 자동 포함되므로 빈 상태로 
 renderParts();
 
 // 인라인 onclick에서 반드시 전역으로 접근 가능해야 하는 함수들을 명시적으로 등록
-window.addParticipant = addParticipant;
-window.delPart        = delPart;
-window.upP            = upP;
-window.handleSubmit   = handleSubmit;
-window.resetForm      = resetForm;
+window.addParticipant  = addParticipant;
+window.delPart         = delPart;
+window.upP             = upP;
+window.handleSubmit    = handleSubmit;
+window.resetForm       = resetForm;
+window.onScheduleChange = onScheduleChange;
 </script>
 </body>
 </html>
