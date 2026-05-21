@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이글스 데이 신청</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #F4611A;
+    --orange-light: #FF7A35;
+    --orange-pale: #FFF0E8;
+    --orange-border: #FFD4B8;
+    --gray-50: #FAFAFA;
+    --gray-100: #F5F5F5;
+    --gray-200: #EBEBEB;
+    --gray-400: #B0B0B0;
+    --gray-600: #707070;
+    --gray-800: #2A2A2A;
+    --white: #FFFFFF;
+    --red: #E53E3E;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--gray-100); font-family: 'Noto Sans KR', sans-serif; color: var(--gray-800); min-height: 100vh; }
+  .header { background: var(--white); border-bottom: 3px solid var(--orange); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .header-inner { max-width: 680px; margin: 0 auto; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .header-title { font-size: 20px; font-weight: 900; color: var(--gray-800); letter-spacing: -0.5px; }
+  .header-title span { color: var(--orange); }
+  .header-sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+  .main { max-width: 680px; margin: 0 auto; padding: 32px 24px 60px; }
+  .card { background: var(--white); border-radius: 16px; border: 1px solid var(--gray-200); padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .card-title { font-size: 12px; font-weight: 700; color: var(--orange); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--orange-border); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
+  .field label .req { color: var(--orange); margin-left: 2px; }
+  .field input, .field select { width: 100%; padding: 11px 14px; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px; font-size: 14px; font-family: 'Noto Sans KR', sans-serif; color: var(--gray-800); transition: border-color 0.15s, box-shadow 0.15s; outline: none; appearance: none; -webkit-appearance: none; }
+  .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23B0B0B0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+  .field input:focus, .field select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(244,97,26,0.1); }
+  .field input.has-error, .field select.has-error { border-color: var(--red); }
+  .err-msg { font-size: 11px; color: var(--red); margin-top: 5px; display: none; }
+  .err-msg.show { display: block; }
+  .p-card { background: var(--gray-50); border: 1.5px solid var(--gray-200); border-radius: 12px; padding: 18px 18px 14px; margin-bottom: 10px; transition: border-color 0.15s; }
+  .p-card:focus-within { border-color: var(--orange-border); }
+  .p-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .p-num { font-size: 12px; font-weight: 700; color: var(--orange); background: var(--orange-pale); padding: 3px 10px; border-radius: 20px; }
+  .del-btn { background: none; border: 1.5px solid var(--gray-200); color: var(--gray-400); border-radius: 8px; padding: 4px 12px; cursor: pointer; font-size: 12px; font-family: 'Noto Sans KR', sans-serif; transition: all 0.15s; }
+  .del-btn:hover { border-color: var(--red); color: var(--red); }
+  .grid3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+  .add-btn { width: 100%; padding: 12px; background: var(--white); border: 1.5px dashed var(--orange-border); color: var(--orange); border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; font-family: 'Noto Sans KR', sans-serif; transition: all 0.15s; margin-top: 4px; }
+  .add-btn:hover { background: var(--orange-pale); border-color: var(--orange); }
+  .submit-btn { width: 100%; padding: 16px; background: var(--orange); color: var(--white); border: none; border-radius: 12px; font-size: 16px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: background 0.15s, transform 0.1s; letter-spacing: 0.3px; box-shadow: 0 4px 14px rgba(244,97,26,0.3); }
+  .submit-btn:hover { background: var(--orange-light); }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn:disabled { background: var(--gray-200); color: var(--gray-400); box-shadow: none; cursor: not-allowed; }
+  .toast { position: fixed; top: 24px; right: 24px; z-index: 9999; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: 'Noto Sans KR', sans-serif; box-shadow: 0 6px 24px rgba(0,0,0,0.15); display: none; animation: slideIn 0.3s ease; max-width: 320px; }
+  .toast.success { background: var(--orange); color: var(--white); }
+  .toast.error { background: var(--red); color: var(--white); }
+  .toast.show { display: block; }
+  .success-screen { display: none; text-align: center; padding: 60px 24px; }
+  .success-screen.show { display: block; }
+  .success-icon { width: 72px; height: 72px; background: var(--orange-pale); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; }
+  .success-title { font-size: 22px; font-weight: 900; color: var(--gray-800); margin-bottom: 10px; }
+  .success-sub { font-size: 14px; color: var(--gray-600); line-height: 1.6; }
+  .success-again { margin-top: 28px; padding: 12px 28px; background: var(--orange); color: var(--white); border: none; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; }
+  .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.85); z-index: 9998; align-items: center; justify-content: center; flex-direction: column; gap: 14px; }
+  .loading-overlay.show { display: flex; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--orange-border); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  .loading-text { font-size: 14px; color: var(--gray-600); font-weight: 600; }
+  .config-notice { background: #FFFBEB; border: 1.5px solid #F6E05E; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; color: #744210; display: none; }
+  .config-notice.show { display: block; }
+  .config-notice strong { display: block; margin-bottom: 4px; font-weight: 700; }
+  @keyframes slideIn { from { opacity:0; transform:translateY(-10px) } to { opacity:1; transform:translateY(0) } }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  @media (max-width: 520px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .grid3 { grid-template-columns: 1fr 1fr; }
+    .grid3 .field:first-child { grid-column: 1 / -1; }
+    .card { padding: 20px 16px; }
+    .main { padding: 20px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <div class="header-title">이글스 데이 <span>신청</span></div>
+      <div class="header-sub">참가 신청서를 작성해 주세요</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="config-notice show" id="config-notice">
+    <strong>⚙️ Firebase 설정 필요</strong>
+    스크립트 상단의 <code>firebaseConfig</code> 값을 Firebase 프로젝트 정보로 교체해 주세요.
+  </div>
+
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">✓</div>
+    <div class="success-title">신청이 완료되었습니다</div>
+    <div class="success-sub" id="success-msg">신청 내용이 정상적으로 접수되었습니다.</div>
+    <button class="success-again" onclick="resetForm()">추가 신청하기</button>
+  </div>
+
+  <div id="form-area">
+    <div class="card">
+      <div class="card-title">신청자 정보</div>
+      <div class="grid2">
+        <div class="field" id="f-empId">
+          <label>사번<span class="req">*</span></label>
+          <input type="text" id="empId" placeholder="예) 202301234">
+          <div class="err-msg" id="err-empId">사번을 입력해주세요</div>
+        </div>
+        <div class="field" id="f-empName">
+          <label>신청자 성명<span class="req">*</span></label>
+          <input type="text" id="empName" placeholder="홍길동">
+          <div class="err-msg" id="err-empName">성명을 입력해주세요</div>
+        </div>
+        <div class="field" id="f-dept">
+          <label>부서<span class="req">*</span></label>
+          <input type="text" id="dept" placeholder="예) 생보ITO1팀">
+          <div class="err-msg" id="err-dept">부서를 입력해주세요</div>
+        </div>
+        <div class="field">
+          <label>참석 확정</label>
+          <select id="confirmed">
+            <option value="Y">Y — 확정</option>
+            <option value="N">N — 미확정</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">참가자 목록 — <span id="part-count-label">1명</span></div>
+      <div class="err-banner" id="err-parts" style="background:#FFF5F5;border:1.5px solid #FED7D7;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:14px;display:none;"></div>
+      <div id="parts-container"></div>
+      <button class="add-btn" onclick="addParticipant()">+ 참가자 추가</button>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="handleSubmit()">신청 완료</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">저장 중...</div>
+</div>
+
+<!-- ★ Firebase SDK (compat 버전 — 일반 스크립트로 사용 가능) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════
+// ★ Firebase 프로젝트 설정을 여기에 입력하세요 ★
+// Firebase Console → 프로젝트 설정 → 앱 → firebaseConfig
+// ═══════════════════════════════════════════════════
+var firebaseConfig = {
+  apiKey:            "AIzaSyCpyWHI_145UWQLJAREEzGfKbTDjT6HPWM",
+  authDomain:        "eagles-day.firebaseapp.com",
+  projectId:         "eagles-day",
+  storageBucket:     "eagles-day.firebasestorage.app",
+  messagingSenderId: "973174291105",
+  appId:             "1:973174291105:web:d6a9b0876f741aac5b8ee0"
+};
+// ═══════════════════════════════════════════════════
+
+var CONFIGURED = firebaseConfig.apiKey !== "YOUR_API_KEY";
+var db;
+
+try {
+  if (CONFIGURED) {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    document.getElementById("config-notice").classList.remove("show");
+  }
+} catch(e) {
+  console.warn("Firebase 초기화 오류:", e);
+}
+
+// ── 상수 ──────────────────────────────────────────
+var RELATIONS  = ["본인","배우자","자녀","부모","형제/자매","기타"];
+var AGE_GROUPS = ["성인","청소년","초등","유아"];
+
+var participants = [];
+var pidSeq = 0;
+
+function makePart() {
+  return { id: ++pidSeq, name: "", relation: "본인", ageGroup: "성인", note: "" };
+}
+
+// ── 참가자 렌더링 ─────────────────────────────────
+// 인라인 onclick에서 호출되므로 window에 명시적으로 등록
+function renderParts() {
+  var c = document.getElementById("parts-container");
+  document.getElementById("part-count-label").textContent = participants.length + "명";
+  c.innerHTML = "";
+  participants.forEach(function(p, i) {
+    var div = document.createElement("div");
+    div.className = "p-card";
+    div.innerHTML =
+      '<div class="p-card-header">' +
+        '<span class="p-num">참가자 ' + (i + 1) + '</span>' +
+        (i > 0 ? '<button class="del-btn" onclick="delPart(' + p.id + ')">삭제</button>' : '') +
+      '</div>' +
+      '<div class="grid3">' +
+        '<div class="field">' +
+          '<label>성명<span style="color:var(--orange);margin-left:2px">*</span></label>' +
+          '<input type="text" id="pn-' + p.id + '" placeholder="참가자 성명" value="' + esc(p.name) + '" oninput="upP(' + p.id + ',\'name\',this.value)">' +
+          '<div class="err-msg" id="pe-' + p.id + '">성명을 입력해주세요</div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>관계</label>' +
+          '<select onchange="upP(' + p.id + ',\'relation\',this.value)">' +
+            RELATIONS.map(function(r){ return '<option value="' + r + '"' + (p.relation===r?' selected':'') + '>' + r + '</option>'; }).join("") +
+          '</select>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>연령대</label>' +
+          '<select onchange="upP(' + p.id + ',\'ageGroup\',this.value)">' +
+            AGE_GROUPS.map(function(a){ return '<option value="' + a + '"' + (p.ageGroup===a?' selected':'') + '>' + a + '</option>'; }).join("") +
+          '</select>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-top:10px">' +
+        '<div class="field">' +
+          '<label>비고</label>' +
+          '<input type="text" placeholder="선택 입력" value="' + esc(p.note) + '" oninput="upP(' + p.id + ',\'note\',this.value)">' +
+        '</div>' +
+      '</div>';
+    c.appendChild(div);
+  });
+}
+
+function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;"); }
+
+function upP(id, field, val) {
+  var p = participants.find(function(x){ return x.id === id; });
+  if (p) p[field] = val;
+  if (field === "name") {
+    var e = document.getElementById("pe-" + id);
+    var inp = document.getElementById("pn-" + id);
+    if (e) e.classList.remove("show");
+    if (inp) inp.classList.remove("has-error");
+  }
+}
+
+function delPart(id) {
+  participants = participants.filter(function(p){ return p.id !== id; });
+  renderParts();
+}
+
+function addParticipant() {
+  participants.push(makePart());
+  renderParts();
+}
+
+// ── 유효성 검사 ───────────────────────────────────
+function clearErrors() {
+  ["empId","empName","dept"].forEach(function(f) {
+    document.getElementById("err-" + f).classList.remove("show");
+    document.getElementById(f).classList.remove("has-error");
+  });
+}
+
+function setErr(field, msg) {
+  var el = document.getElementById("err-" + field);
+  if (msg) el.textContent = msg;
+  el.classList.add("show");
+  document.getElementById(field).classList.add("has-error");
+}
+
+function validate() {
+  clearErrors();
+  var ok = true;
+  if (!gv("empId"))   { setErr("empId",   "사번을 입력해주세요");  ok = false; }
+  if (!gv("empName")) { setErr("empName", "성명을 입력해주세요");  ok = false; }
+  if (!gv("dept"))    { setErr("dept",    "부서를 입력해주세요");  ok = false; }
+  participants.forEach(function(p) {
+    if (!p.name.trim()) {
+      var e = document.getElementById("pe-" + p.id);
+      var inp = document.getElementById("pn-" + p.id);
+      if (e) e.classList.add("show");
+      if (inp) inp.classList.add("has-error");
+      ok = false;
+    }
+  });
+  return ok;
+}
+
+function gv(id) { return document.getElementById(id).value.trim(); }
+
+// ── 제출 ──────────────────────────────────────────
+function handleSubmit() {
+  if (!validate()) return;
+
+  if (!CONFIGURED) {
+    showToast("Firebase 미설정 상태입니다. firebaseConfig를 입력해 주세요.", "error");
+    return;
+  }
+
+  var empName = gv("empName");
+  var payload = {
+    empId:     gv("empId"),
+    empName:   empName,
+    dept:      gv("dept"),
+    confirmed: document.getElementById("confirmed").value,
+    qty:       participants.length,
+    participants: participants.map(function(p) {
+      return { name: p.name.trim(), relation: p.relation, ageGroup: p.ageGroup, note: p.note.trim() };
+    }),
+    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  document.getElementById("submit-btn").disabled = true;
+  document.getElementById("loading").classList.add("show");
+
+  db.collection("applications").add(payload)
+    .then(function() {
+      document.getElementById("loading").classList.remove("show");
+      document.getElementById("form-area").style.display = "none";
+      document.getElementById("success-msg").textContent =
+        empName + "님의 신청(" + participants.length + "명)이 정상적으로 접수되었습니다.";
+      document.getElementById("success-screen").classList.add("show");
+    })
+    .catch(function(err) {
+      document.getElementById("loading").classList.remove("show");
+      document.getElementById("submit-btn").disabled = false;
+      showToast("저장에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
+      console.error(err);
+    });
+}
+
+function resetForm() {
+  document.getElementById("success-screen").classList.remove("show");
+  document.getElementById("form-area").style.display = "block";
+  ["empId","empName","dept"].forEach(function(f){ document.getElementById(f).value = ""; });
+  document.getElementById("confirmed").value = "Y";
+  participants = [makePart()];
+  renderParts();
+  clearErrors();
+  document.getElementById("submit-btn").disabled = false;
+}
+
+// ── Toast ─────────────────────────────────────────
+function showToast(msg, type) {
+  var el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "toast " + (type||"success") + " show";
+  setTimeout(function(){ el.classList.remove("show"); }, 3500);
+}
+
+// ── 초기화 ────────────────────────────────────────
+participants = [makePart()];
+renderParts();
+
+// 인라인 onclick에서 반드시 전역으로 접근 가능해야 하는 함수들을 명시적으로 등록
+window.addParticipant = addParticipant;
+window.delPart        = delPart;
+window.upP            = upP;
+window.handleSubmit   = handleSubmit;
+window.resetForm      = resetForm;
+</script>
+</body>
+</html>
